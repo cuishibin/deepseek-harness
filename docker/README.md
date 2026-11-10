@@ -118,3 +118,22 @@ docker run --rm -it `
 - The prod image starts in `/workspace`, while the deployed runtime lives under `/opt/dsh`. Mount a project or checkout there when you want the Web profile to use a specific workspace root.
 - Both images expose port `3080`; change the container port with `DSH_PORT` if needed.
 - Build speed usually improves most after the first successful build: the cached base layers and the shared pnpm store remove much of the repeated download cost, but `pnpm run build` is still a full repository build.
+
+## 初始登录token存储位置
+
+```text
+- /opt/dsh/data/dsh-web-dev/dsh-home/.credentials.yaml
+
+[root@localhost dsh-home]# more .credentials.yaml
+version: 1
+records:
+  client-connection/browser-session:
+    kind: grant
+    payload:
+      version: 1
+      secret: 1RoxPQ5YYPCg5lON0aAtws2AQzLGhkywYF57a-_RHcE
+
+secret: 并不是初始登录token，而是登录后获取的token，用于后续请求
+
+http://10.12.1.238:3080/?token=1RoxPQ5YYPCg5lON0aAtws2AQzLGhkywYF57a-_RHcE
+```
