@@ -1,0 +1,11 @@
+.git
+.dsh-build
+dist-exe
+node_modules
+**/node_modules
+*.tsbuildinfo
+docker/data
+.agents
+.claude
+.github
+benchmarks

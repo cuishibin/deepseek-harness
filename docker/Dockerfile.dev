@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1.7
+FROM node:24-bookworm AS builder
+
+# Corepack provides the workspace-pinned pnpm version, and the dedicated store path
+# lets BuildKit persist pnpm downloads between builds.
+ENV PNPM_HOME=/pnpm
+ENV PATH=/pnpm:$PATH
+
+RUN corepack enable \
+ && corepack prepare pnpm@11.28.5 --activate
+
+WORKDIR /app
+
+COPY . .
+
+ARG DSH_CLIENT_COMMIT_HASH
+
+# The root build embeds client-side commit metadata. Local Docker contexts usually exclude `.git`,
+# so callers pass the commit explicitly instead of copying repository metadata into the image.
+RUN test -n "$DSH_CLIENT_COMMIT_HASH" \
+ || (echo "Docker build requires --build-arg DSH_CLIENT_COMMIT_HASH=<git commit hash> because .git is excluded from the build context." >&2; exit 1)
+
+ENV DSH_CLIENT_COMMIT_HASH=$DSH_CLIENT_COMMIT_HASH
+
+# Reuse the pnpm store across Docker builds so repeated installs only fetch new packages.
+RUN --mount=type=cache,id=dsh-pnpm-store,target=/pnpm/store \
+  pnpm install --frozen-lockfile
+RUN pnpm run build
+
+FROM node:24-bookworm-slim AS runtime
+
+# The dev image keeps the full source tree so `pnpm dsh web` can run exactly as the repo documents.
+RUN corepack enable \
+ && corepack prepare pnpm@11.28.5 --activate \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates tini \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=development
+ENV DSH_HOME=/data/dsh-home
+
+WORKDIR /app
+
+COPY --from=builder /app /app
+COPY --from=builder --chmod=755 /app/docker/entrypoint-dev.sh /usr/local/bin/dsh-web-dev
+
+VOLUME ["/data/dsh-home"]
+EXPOSE 3080
+
+ENTRYPOINT ["tini", "--", "dsh-web-dev"]

@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1.7
+FROM node:24-bookworm AS builder
+
+# The production image builds from source, then deploys only the runtime closure.
+# The dedicated pnpm store path lets BuildKit persist downloads between builds.
+ENV PNPM_HOME=/pnpm
+ENV PATH=/pnpm:$PATH
+
+RUN corepack enable \
+ && corepack prepare pnpm@11.28.5 --activate
+
+WORKDIR /src
+
+COPY . .
+
+ARG DSH_CLIENT_COMMIT_HASH
+
+# The root build embeds client-side commit metadata. Local Docker contexts usually exclude `.git`,
+# so callers pass the commit explicitly instead of copying repository metadata into the image.
+RUN test -n "$DSH_CLIENT_COMMIT_HASH" \
+ || (echo "Docker build requires --build-arg DSH_CLIENT_COMMIT_HASH=<git commit hash> because .git is excluded from the build context." >&2; exit 1)
+
+ENV DSH_CLIENT_COMMIT_HASH=$DSH_CLIENT_COMMIT_HASH
+
+# Reuse the pnpm store across Docker builds so repeated installs only fetch new packages.
+RUN --mount=type=cache,id=dsh-pnpm-store,target=/pnpm/store \
+  pnpm install --frozen-lockfile
+RUN pnpm run build
+RUN --mount=type=cache,id=dsh-pnpm-store,target=/pnpm/store \
+  pnpm --filter dsh-python-runtime-closure deploy --prod \
+  --config.allow-unused-patches=true \
+  --config.node-linker=hoisted \
+  --config.pnpmfile=/src/scripts/python-runtime-deploy.pnpmfile.mjs \
+  --config.link-workspace-packages=true \
+  --config.hoist-workspace-packages=false \
+  /opt/dsh
+
+FROM node:24-bookworm-slim AS runtime
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates tini \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production
+ENV DSH_HOME=/data/dsh-home
+
+WORKDIR /workspace
+
+COPY --from=builder /opt/dsh /opt/dsh
+COPY --from=builder --chmod=755 /src/docker/entrypoint-prod.sh /usr/local/bin/dsh-web-prod
+
+VOLUME ["/data/dsh-home", "/workspace"]
+EXPOSE 3080
+
+ENTRYPOINT ["tini", "--", "dsh-web-prod"]
