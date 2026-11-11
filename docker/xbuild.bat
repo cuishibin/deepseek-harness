@@ -19,23 +19,23 @@ if not defined DSH_CLIENT_COMMIT_HASH (
   exit /b 1
 )
 
-@REM docker build ^
-@REM   --build-arg HTTP_PROXY=http://10.12.1.132:1083 ^
-@REM   --build-arg HTTPS_PROXY=http://10.12.1.132:1083 ^
-@REM   --build-arg NO_PROXY=localhost,127.0.0.1 ^
-@REM   --build-arg DSH_CLIENT_COMMIT_HASH=%DSH_CLIENT_COMMIT_HASH% ^
-@REM   -f docker/Dockerfile.prod ^
-@REM   -t dsh-web-prod ^
-@REM   .
-
 docker build ^
   --build-arg HTTP_PROXY=http://10.12.1.132:1083 ^
   --build-arg HTTPS_PROXY=http://10.12.1.132:1083 ^
   --build-arg NO_PROXY=localhost,127.0.0.1 ^
   --build-arg DSH_CLIENT_COMMIT_HASH=%DSH_CLIENT_COMMIT_HASH% ^
-  -f docker/Dockerfile.dev ^
-  -t dsh-web-dev ^
+  -f docker/Dockerfile.prod ^
+  -t dsh-web-prod ^
   .
+
+@REM docker build ^
+@REM   --build-arg HTTP_PROXY=http://10.12.1.132:1083 ^
+@REM   --build-arg HTTPS_PROXY=http://10.12.1.132:1083 ^
+@REM   --build-arg NO_PROXY=localhost,127.0.0.1 ^
+@REM   --build-arg DSH_CLIENT_COMMIT_HASH=%DSH_CLIENT_COMMIT_HASH% ^
+@REM   -f docker/Dockerfile.dev ^
+@REM   -t dsh-web-dev ^
+@REM   .
 
 
 set "EXIT_CODE=%ERRORLEVEL%"

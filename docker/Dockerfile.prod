@@ -41,6 +41,12 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates tini \
  && rm -rf /var/lib/apt/lists/*
 
+# Plugin installation from the market spawns pnpm in the profile workspace, so the
+# runtime image needs pnpm on PATH. Keep the version aligned with the repo's
+# packageManager and the dev image, provisioned through corepack the same way.
+RUN corepack enable \
+ && corepack prepare pnpm@11.28.5 --activate
+
 ENV NODE_ENV=production
 ENV DSH_HOME=/data/dsh-home
 
