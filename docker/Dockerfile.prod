@@ -37,18 +37,22 @@ RUN --mount=type=cache,id=dsh-pnpm-store,target=/pnpm/store \
 
 FROM node:24-bookworm-slim AS runtime
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates tini \
- && rm -rf /var/lib/apt/lists/*
-
 # Plugin installation from the market spawns pnpm in the profile workspace, so the
 # runtime image needs pnpm on PATH. Keep the version aligned with the repo's
 # packageManager and the dev image, provisioned through corepack the same way.
-RUN corepack enable \
+# python3/python3-pip are absent from the slim base and required by Python-developed
+# plugins executing through the system interpreter.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates tini python3 python3-pip vim-tiny \
+ && rm -rf /var/lib/apt/lists/* \
+ && corepack enable \
  && corepack prepare pnpm@11.28.5 --activate
 
 ENV NODE_ENV=production
 ENV DSH_HOME=/data/dsh-home
+ENV PYTHONPATH=/data/dsh-home/.pylibs
+ENV LANG=C.utf8
+ENV LC_ALL=C.utf8
 
 WORKDIR /workspace
 
