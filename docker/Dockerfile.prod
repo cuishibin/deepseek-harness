@@ -41,9 +41,11 @@ FROM node:24-bookworm-slim AS runtime
 # runtime image needs pnpm on PATH. Keep the version aligned with the repo's
 # packageManager and the dev image, provisioned through corepack the same way.
 # python3/python3-pip are absent from the slim base and required by Python-developed
-# plugins executing through the system interpreter.
+# plugins executing through the system interpreter. git/curl/wget support workspace
+# source checkout and download tasks inside the container. procps provides `ps`
+# for inspecting processes inside the container.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates tini python3 python3-pip vim-tiny \
+ && apt-get install -y --no-install-recommends ca-certificates tini python3 python3-pip vim-tiny git curl wget procps tmux \
  && rm -rf /var/lib/apt/lists/* \
  && corepack enable \
  && corepack prepare pnpm@11.28.5 --activate

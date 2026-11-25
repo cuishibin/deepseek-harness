@@ -1,0 +1,4 @@
+# 覆盖层不会改变插件路径的解析基准，因此使用绝对路径。
+- insert:
+    - id: simple-hello
+      name: 'D:/30-develop/github/deepseek-harness/myplugins/zero/hello.ts'

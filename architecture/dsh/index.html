@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从 OpenClaw 到 DeepSeek Harness — 开发者迁移与入门指南</title>
+<meta name="description" content="面向 OpenClaw 开发者的 DSH 入门与迁移指南：DSH 是什么、概念对照、插件化运行方式、迁移步骤、第一个插件、Skill / MCP 接入，以及项目现状与发展方向。">
+<meta name="theme-color" content="#F3F5F8">
+<meta name="color-scheme" content="light">
+<style>
+:root {
+  --bg-primary: #F3F5F8;
+  --bg-secondary: #ECEFF4;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFC;
+  --card-border: #E2E6EC;
+  --accent: #2563EB;
+  --accent-light: #3B82F6;
+  --accent-cyan: #0090AA;
+  --gradient-cyan: linear-gradient(135deg, #0090AA, #00B4D8);
+  --gradient-blue: linear-gradient(135deg, #2563EB, #1D4ED8);
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --table-border: #E5E7EB;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  --card-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 68px;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection { background: rgba(37,99,235,0.16); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+img { max-width: 100%; height: auto; }
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+/* Background grid */
+.bg-grid {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+/* Header */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding: 8px 0;
+}
+.header-inner {
+  max-width: 900px; margin: 0 auto; padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 32px; height: 32px; background: var(--gradient-blue);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+}
+.header-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.header-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.2);
+  border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--success);
+}
+.pulse-dot {
+  width: 8px; height: 8px; background: var(--success);
+  border-radius: 50%; animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+.header-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; }
+.header-nav a {
+  color: var(--text-secondary); text-decoration: none; font-size: 13px;
+  white-space: nowrap; transition: color 0.3s;
+}
+.header-nav a:hover { color: var(--accent); }
+
+/* Hero */
+.hero {
+  padding: 90px 0 36px; text-align: center; position: relative;
+}
+.hero::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-size: 12px; color: var(--accent); letter-spacing: 3px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.hero h1 {
+  font-size: 34px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.hero-subtitle {
+  font-size: 14px; font-weight: 400; color: var(--text-secondary);
+  max-width: 660px; margin: 0 auto 16px;
+}
+.hero-statement { margin-bottom: 18px; }
+
+/* Stat Cards */
+.stat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  margin-bottom: 0;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 16px 10px; text-align: center;
+  box-shadow: var(--card-shadow); transition: all 0.3s;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--accent);
+}
+.stat-card .stat-icon { font-size: 22px; margin-bottom: 2px; }
+.stat-number {
+  font-size: 28px; font-weight: 700;
+  color: var(--accent); line-height: 1; margin-bottom: 2px;
+}
+.stat-label { font-size: 12px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.stat-source { margin-top: 10px; font-size: 12px; color: var(--text-secondary); }
+.stat-source a, .section a:not(.btn) { color: #1D4ED8; }
+.quick-steps { padding-left: 24px; margin-bottom: 16px; }
+.quick-steps .flow-card { margin: 6px 0 12px; }
+
+/* Section */
+.section {
+  padding: 28px 0 32px;
+  margin-top: 16px;
+}
+.hero + .section { margin-top: 0; }
+.section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 18px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 20px;
+}
+.section-title::before {
+  content: ''; width: 4px; height: 18px;
+  background: var(--gradient-blue); border-radius: 2px;
+}
+.section-desc {
+  font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;
+}
+
+/* Architecture */
+.arch-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 26px 20px 30px;
+}
+.arch-diagram {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 8px 0;
+}
+.arch-row {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%;
+}
+.arch-node {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 10px 16px; text-align: center;
+  min-width: 110px; transition: all 0.3s; box-shadow: var(--card-shadow);
+}
+.arch-node:hover {
+  border-color: var(--accent);
+  box-shadow: var(--card-shadow-hover);
+}
+.arch-node .arch-icon { font-size: 20px; margin-bottom: 4px; }
+.arch-node .arch-name { font-size: 13px; font-weight: 600; }
+.arch-node .arch-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.arch-arrow {
+  font-size: 18px; color: var(--accent); display: flex; align-items: center;
+}
+.arch-note {
+  margin-top: 12px; padding: 10px 20px;
+  background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.2);
+  border-radius: 8px; font-size: 12px; color: var(--accent);
+}
+.arch-note strong { font-size: 13px; }
+
+/* Difficulty tags */
+.tag {
+  display: inline-block; padding: 3px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+.tag-online { background: rgba(22,163,74,0.08); color: var(--success); border: 1px solid rgba(22,163,74,0.2); }
+.tag-ongoing { background: rgba(217,119,6,0.08); color: var(--warning); border: 1px solid rgba(217,119,6,0.2); }
+.tag-planned { background: rgba(220,38,38,0.06); color: var(--danger); border: 1px solid rgba(220,38,38,0.2); }
+
+/* Risk note */
+.risk-note {
+  margin-top: 16px; padding: 14px 20px;
+  background: rgba(217,119,6,0.05);
+  border: 1px solid rgba(217,119,6,0.25);
+  border-left: 4px solid var(--warning);
+  border-radius: 10px;
+}
+.risk-note .risk-head {
+  font-size: 13.5px; font-weight: 700; color: var(--warning);
+  margin-bottom: 8px;
+}
+.risk-note ul { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.risk-note li { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+.risk-note li b { color: var(--text-primary); }
+
+/* Pros / Cons */
+.pc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+.pc-card {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 16px 18px; box-shadow: var(--card-shadow);
+}
+.pc-card.pros { border-left: 4px solid var(--success); }
+.pc-card.cons { border-left: 4px solid var(--warning); }
+.pc-card .pc-head { font-size: 13.5px; font-weight: 700; margin-bottom: 8px; }
+.pc-card.pros .pc-head { color: var(--success); }
+.pc-card.cons .pc-head { color: var(--warning); }
+.pc-card ul { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.pc-card li { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+.pc-card li b { color: var(--text-primary); }
+.arch-img {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+.arch-img img { width: 100%; display: block; }
+.arch-img figcaption {
+  padding: 8px 14px; font-size: 11px; color: var(--text-muted);
+  border-top: 1px solid var(--card-border); text-align: center;
+}
+
+/* Flow */
+.flow-card {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 12px; padding: 18px 20px;
+  box-shadow: var(--card-shadow);
+  font-family: var(--font-mono); font-size: 12.5px;
+  color: var(--text-secondary); overflow-x: auto; line-height: 1.8;
+  white-space: pre; tab-size: 2; margin: 0;
+}
+.flow-card .kw { color: var(--accent); font-weight: 600; }
+.flow-card .cm { color: var(--text-muted); }
+
+/* Capability Cards */
+.cap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.cap-card {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 18px; transition: all 0.3s;
+  box-shadow: var(--card-shadow); display: flex; gap: 12px;
+}
+.cap-card:hover { border-color: var(--accent); box-shadow: var(--card-shadow-hover); transform: translateX(4px); }
+.cap-card .cap-icon {
+  font-size: 26px; flex-shrink: 0; width: 44px; height: 44px;
+  background: rgba(37,99,235,0.1); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cap-card .cap-icon.cyan { background: rgba(0,144,170,0.12); }
+.cap-card .cap-icon.purple { background: rgba(167,139,250,0.12); }
+.cap-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.cap-card p { font-size: 12px; color: var(--text-secondary); }
+.cap-card code {
+  font-family: var(--font-mono); font-size: 11px; background: rgba(0,0,0,0.04);
+  border-radius: 4px; padding: 1px 5px; color: #1D4ED8;
+}
+.cap-example {
+  margin-top: 8px; padding: 6px 10px;
+  background: rgba(0,0,0,0.04); border-radius: 6px;
+  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+}
+
+/* Form / scene cards */
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.form-card {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 18px; transition: all 0.3s;
+  box-shadow: var(--card-shadow);
+}
+.form-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: var(--card-shadow-hover); }
+.form-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.form-card .form-chip {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; background: var(--gradient-blue);
+}
+.form-card .form-chip.c2 { background: var(--gradient-cyan); }
+.form-card p, .form-card li { font-size: 13px; color: var(--text-secondary); }
+.form-card ul { padding-left: 18px; }
+.form-highlight {
+  margin-top: 16px; padding: 10px 20px;
+  background: rgba(22,163,74,0.06); border: 1px solid rgba(22,163,74,0.2);
+  border-radius: 8px; font-size: 13px; color: var(--success); text-align: center;
+}
+
+/* Table */
+.table-wrapper {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.dsh-table { width: 100%; border-collapse: collapse; }
+.dsh-table th {
+  text-align: left; padding: 10px 14px; font-size: 12px;
+  color: var(--text-muted); font-weight: 500;
+  border-bottom: 1px solid var(--table-border);
+  background: #FAFBFC;
+}
+.dsh-table td {
+  padding: 10px 14px; font-size: 13px;
+  border-bottom: 1px solid var(--table-border);
+  transition: background 0.2s; vertical-align: top; color: var(--text-secondary);
+}
+.dsh-table tbody tr:hover td { background: rgba(37,99,235,0.04); }
+.dsh-table tbody tr:last-child td { border-bottom: none; }
+.dsh-table td b, .dsh-table td strong { color: var(--text-primary); }
+.dsh-table code {
+  font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+  background: rgba(37,99,235,0.06); border-radius: 4px; padding: 1px 5px;
+}
+
+/* Timeline (prospect) */
+.step-list {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.step-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 16px 18px;
+  box-shadow: var(--card-shadow); transition: all 0.3s;
+}
+.step-item:hover { border-color: var(--accent); box-shadow: var(--card-shadow-hover); }
+.step-number {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+}
+.step-number.warn { background: var(--warning); }
+.step-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.step-body p { font-size: 13px; color: var(--text-secondary); }
+
+/* CTA */
+.cta-section {
+  text-align: center; padding: 28px 0;
+}
+.cta-section h3 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.cta-section p { color: var(--text-secondary); margin-bottom: 18px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 24px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; text-decoration: none; cursor: pointer;
+  border: none; transition: all 0.3s;
+}
+.btn-primary {
+  background: var(--gradient-blue); color: #fff;
+  box-shadow: 0 4px 20px rgba(37,99,235,0.3);
+}
+.btn-primary:hover { box-shadow: 0 6px 30px rgba(37,99,235,0.4); transform: translateY(-2px); }
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--card-border); padding: 16px 0;
+  text-align: center;
+}
+.footer p { font-size: 11px; color: var(--text-muted); }
+
+/* Hero value prop */
+.hero-value {
+  font-size: 13.5px; color: var(--text-secondary);
+  max-width: 700px; margin: 0 auto 14px;
+  padding: 12px 20px;
+  background: rgba(37,99,235,0.04);
+  border: 1px solid rgba(37,99,235,0.15);
+  border-radius: 10px;
+}
+.hero-value b { color: var(--accent); }
+
+/* Three-layer explain */
+.layer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.layer-card {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 18px; box-shadow: var(--card-shadow);
+}
+.layer-card .layer-chip {
+  display: inline-block; font-size: 11px; font-weight: 700; color: #fff;
+  background: var(--gradient-blue); border-radius: 20px; padding: 2px 12px;
+  margin-bottom: 10px; letter-spacing: 1px;
+}
+.layer-card:nth-child(2) .layer-chip { background: var(--gradient-cyan); }
+.layer-card:nth-child(3) .layer-chip { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+.layer-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.layer-card p { font-size: 12.5px; color: var(--text-secondary); }
+
+/* Security chips */
+.sec-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+.sec-chip {
+  background: var(--bg-card); border: 1px solid rgba(22,163,74,0.25);
+  border-radius: 10px; padding: 14px 10px; text-align: center;
+  box-shadow: var(--card-shadow);
+}
+.sec-chip .sec-icon { font-size: 20px; margin-bottom: 4px; }
+.sec-chip .sec-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.sec-chip .sec-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+/* Collapsible deep reading */
+details.deep {
+  background: var(--bg-card); border: 1px solid var(--card-border);
+  border-radius: 12px; padding: 0; box-shadow: var(--card-shadow);
+  margin-top: 14px;
+}
+details.deep > summary {
+  cursor: pointer; list-style: none;
+  padding: 14px 18px; font-size: 13.5px; font-weight: 600;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+details.deep > summary::-webkit-details-marker { display: none; }
+details.deep > summary::before { content: '▸'; color: var(--accent); transition: transform .2s; }
+details.deep[open] > summary::before { transform: rotate(90deg); }
+details.deep > summary:hover { color: var(--accent); }
+details.deep .deep-body { padding: 0 18px 16px; }
+.step-body p code {
+  font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+  background: rgba(37,99,235,0.06); border-radius: 4px; padding: 1px 5px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .cap-grid { grid-template-columns: 1fr; }
+  .arch-row { flex-wrap: wrap; }
+  .layer-grid { grid-template-columns: 1fr; }
+  .sec-grid { grid-template-columns: repeat(2, 1fr); }
+}
+/* Wrapped chapter links stay in flow so they cannot cover an anchor target. */
+@media (max-width: 900px) {
+  html { scroll-padding-top: 12px; }
+  .header { position: relative; }
+  .header-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .header-badge { display: none; }
+  .header-nav { justify-content: flex-start; }
+  .header-nav a { padding: 4px 0; }
+  .hero { padding-top: 36px; }
+}
+@media (max-width: 768px) {
+  .hero { padding-bottom: 28px; }
+  .hero h1 { font-size: 27px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-grid, .pc-grid { grid-template-columns: 1fr; }
+  .header-title { font-size: 13.5px; }
+  .section { padding: 22px 0 24px; }
+  .arch-section { padding: 20px 14px 24px; border-radius: 12px; }
+  .dsh-table { min-width: 560px; }
+  .cta-section h3 { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media print {
+  .bg-grid, .header, .cta-section, .footer .btn { display: none !important; }
+  body { background: #fff; }
+  .container { max-width: 100%; padding: 0; }
+  .section { padding: 14px 0; break-inside: avoid; }
+  .arch-section { border: none; background: #fff; padding: 14px 0; }
+  .cap-card, .form-card, .step-item, .table-wrapper { box-shadow: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="logo-icon">DSH</div>
+      <span class="header-title">从 OpenClaw 到 DeepSeek Harness</span>
+    </div>
+    <nav class="header-nav" aria-label="页面章节导航">
+      <a href="#quick-start">快速开始</a>
+      <a href="#what">DSH 是什么</a>
+      <a href="#compare">定位区别</a>
+      <a href="#concepts">概念对照</a>
+      <a href="#framework">运行方式</a>
+      <a href="#migration">迁移步骤</a>
+      <a href="#first-plugin">第一个插件</a>
+      <a href="#market">插件市场</a>
+      <a href="#status">项目现状</a>
+      <a href="#instability">不稳定与风险</a>
+      <a href="#research">研究进展</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-eyebrow">OPENCLAW → DSH · 开发者指南 · 2026-11</div>
+  <h1>从 OpenClaw 到 DeepSeek Harness</h1>
+  <p class="hero-subtitle">面向 OpenClaw 开发者的 DSH 入门与迁移指南</p>
+  <p class="hero-value">DSH 将模型、工具、Skill、MCP、会话和智能体循环做成<b>可组合插件</b>，让开发者按需组装自己的 Agent 运行时。</p>
+  <p class="hero-statement"><a class="btn btn-primary" href="#quick-start">快速开始：运行一个 Headless 任务</a></p>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🔌</div>
+      <div class="stat-number">36</div>
+      <div class="stat-label">能力接缝：服务定义规定用法，提供者实现能力，消费者按定义调用。</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚙️</div>
+      <div class="stat-number">7,924</div>
+      <div class="stat-label"><a href="https://dshmarket.com/">DeepSeek Harness Market</a> 收录的社区插件数（<time datetime="2026-11-18">2026-11-18</time>）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-number">370</div>
+      <div class="stat-label"><code>packages/*/*/package.json</code> 文件数，含实验性包</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🧩</div>
+      <div class="stat-number">5</div>
+      <div class="stat-label">Profile 是一份有名字的启动配置，指定加载哪些插件组合包。CLI 随附 <code>web</code>、<code>headless</code>、<code>sdk</code>、<code>sdk-minimal</code>、<code>acp</code>；<code>desktop</code> 由 Electron 桌面应用单独管理。</div>
+    </div>
+  </div>
+  <p class="stat-source">统计口径：<a href="https://github.com/deepseek-ai/deepseek-harness/tree/58355aa1996abb47576924ce4e32a525148ebf26/packages">2026-11-11 仓库快照</a>，包数仅统计上述路径，接缝数按同一版本<a href="https://github.com/deepseek-ai/deepseek-harness/blob/58355aa1996abb47576924ce4e32a525148ebf26/docs/capability-seams.zh.md">能力接缝表</a>中的 <code>seam</code> 行统计。</p>
+</section>
+
+<section class="section arch-section" id="quick-start">
+  <h2 class="section-title">快速开始：运行一个 Headless 任务</h2>
+  <p class="section-desc">先安装 DSH CLI，确保终端可调用 <code>dsh</code>。实际运行任务还需要模型凭据；默认 DeepSeek 提供者读取 <code>DEEPSEEK_API_KEY</code>。请在你希望作为工作区的目录中执行命令。</p>
+  <ol class="quick-steps">
+    <li>查看合并后的配置树。此命令不启动 Agent，也不调用模型。
+      <pre class="flow-card"><code>dsh --profile headless --dump-config</code></pre>
+    </li>
+    <li>配置凭据后运行一个提示词。成功时终端打印答案，命令随后退出。
+      <pre class="flow-card"><code>dsh --profile headless "用一句话介绍 DeepSeek Harness"</code></pre>
+    </li>
+  </ol>
+  <p>参阅仓库的 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/README.zh.md#profiles">CLI 配置说明</a>和<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cli-help.zh.md#dsh-headless">Headless 命令参考</a>。跑通后再<a href="#migration">逐项迁移 OpenClaw 能力</a>。</p>
+</section>
+
+<!-- 1. DSH 是什么 -->
+<section class="section" id="what">
+  <h2 class="section-title">DSH 是什么</h2>
+  <p class="section-desc">如果你已经使用过 OpenClaw，可以把 DSH 理解为一个更偏<b>底层运行时、插件组合和能力扩展</b>的 Agent Harness。本文帮助你从熟悉的 OpenClaw 概念出发，快速完成 DSH 入门。</p>
+  <div class="cap-grid">
+    <div class="cap-card">
+      <div class="cap-icon">◆</div>
+      <div>
+        <h4>可嵌入、可组装的 Agent Runtime</h4>
+        <p>DSH 负责组合模型、工具、Skill、MCP、会话和 Agent Loop。开发者可以选择已有能力，也可以通过插件扩展运行时——扩展方式是挂载新插件，而非修改核心代码。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon cyan">◇</div>
+      <div>
+        <h4>一切皆插件，没有特权核心</h4>
+        <p>模型适配器、工具注册表、会话日志乃至智能体循环本身都是插件。换一个提供者，就能换掉对应能力，不存在需要打补丁的中心枢纽。</p>
+        <div class="cap-example">ctx.effect() · ctx.on() · typed events</div>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon purple">▣</div>
+      <div>
+        <h4>多种运行形态</h4>
+        <p>同一底座经 Profile + Bundle 组合派生 <b>Web、SDK、Headless、ACP</b> 等多种形态，适合把 Agent 能力嵌入现有产品。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">◈</div>
+      <div>
+        <h4>与 OpenClaw 的关系</h4>
+        <p>OpenClaw 更关注"如何把 Agent 提供给用户"，DSH 更关注"如何构建和扩展 Agent 本身"。两者互补共生，不是简单的替代关系。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OpenClaw 与 DSH 的定位区别 -->
+<section class="section" id="compare">
+  <h2 class="section-title">OpenClaw 与 DSH 的定位区别</h2>
+  <p class="section-desc">两者不是替代关系：<b>OpenClaw</b> 更像面向用户和业务场景的 Agent 平台，负责把智能体接入各种交互渠道；<b>DSH</b> 更像可嵌入、可组装的 Agent Runtime，负责构建和扩展智能体本身。从 OpenClaw 迁移到 DSH，不是简单替换产品，而是从"使用现成 Agent 平台"转向"构建可控的 Agent 运行时"。</p>
+
+  <figure class="arch-img" style="margin:0 0 16px">
+    <img src="architecture/openclaw-dsh.png" alt="OpenClaw 与 DeepSeek Harness 架构对比：按应用接入层、宿主与运行时组装层、会话与上下文管理层、Agent 执行与模型工具层、能力扩展层、基础设施与治理层逐层对照" loading="lazy" decoding="async">
+    <figcaption>架构分层对比 · 同一技术栈，不同定位</figcaption>
+  </figure>
+
+  <div class="table-wrapper">
+    <table class="dsh-table">
+      <thead>
+        <tr><th>对比维度</th><th>OpenClaw</th><th>DeepSeek Harness (DSH)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>核心枢纽</b></td>
+          <td>Gateway —— 消息接入、路由分发、会话管理</td>
+          <td>Cordis Context / Plugin Tree —— 插件树与共享上下文</td>
+        </tr>
+        <tr>
+          <td><b>主要抽象</b></td>
+          <td>平台服务与 Agent 路由</td>
+          <td>插件 / Service / Event</td>
+        </tr>
+        <tr>
+          <td><b>扩展方式</b></td>
+          <td>平台插件、Channel、Tool、Skill</td>
+          <td>Bundle、Plugin、Service Provider</td>
+        </tr>
+        <tr>
+          <td><b>运行时组装</b></td>
+          <td>Gateway 中心化管理，统一接入多端（IM / WebChat / CLI / Nodes / API）</td>
+          <td>Profile + Bundle + Cordis Plugin Tree，配置组合与逐层 patch</td>
+        </tr>
+        <tr>
+          <td><b>典型价值</b></td>
+          <td>把 Agent 接入用户工作流</td>
+          <td>灵活构建与替换 Agent Runtime</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cap-grid" style="margin-top:16px">
+    <div class="cap-card">
+      <div class="cap-icon">◎</div>
+      <div>
+        <h4>定位不同</h4>
+        <p><b>OpenClaw</b> 面向企业 Agent 平台，强调用户接入与业务场景；<b>DSH</b> 面向 Agent Runtime，强调插件化与能力组合。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon cyan">◉</div>
+      <div>
+        <h4>核心机制不同</h4>
+        <p>OpenClaw 采用 <b>Gateway 中心化管理</b>；DSH 采用 <b>Cordis 插件化架构</b>，连智能体循环本身都是可替换的插件。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon purple">◇</div>
+      <div>
+        <h4>扩展方式不同</h4>
+        <p>OpenClaw 通过 Plugin / Skill / Tool 扩展；DSH 通过 Bundle / Plugin / Service 组合，注册即副作用，卸载自动回滚。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">◈</div>
+      <div>
+        <h4>应用侧重点不同</h4>
+        <p>OpenClaw 侧重<b>用户交互与任务管理</b>；DSH 侧重<b>可插拔的 Agent 运行时</b>，供上层产品组合复用。</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="section-title" style="margin-top:24px;font-size:16px">什么时候选择 DSH</h3>
+  <div class="form-grid">
+    <div class="form-card">
+      <h4><span class="form-chip">换</span>需要替换模型、工具或 Agent Loop</h4>
+      <p>这些能力在 DSH 中都是插件，换实现即换能力，无需改动核心代码，不锁定供应商。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip c2">嵌</span>需要把 Agent 能力嵌入现有产品</h4>
+      <p>通过 SDK（TypeScript / Python）或 Headless 形态，把智能体运行时直接组合进你自己的应用。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip">形</span>需要多种运行形态</h4>
+      <p>Web、SDK、Headless、ACP 共享同一底座，按场景选择 Profile 即可，研发成果复用度极高。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip c2">控</span>需要严格的插件权限、审批和审计</h4>
+      <p>沙箱后端、审批策略、权限最小化与"模型可见即已记录"的会话日志，满足企业合规要求。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip">存</span>需要长期维护会话与运行时状态</h4>
+      <p>版本化持久化格式让长周期智能体工作流的每一步都能重建与追溯。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip c2">组</span>需要组合而非修改</h4>
+      <p>扩展方式是挂载新插件、选择已有插件，或实现一个新的插件接缝——而不是 fork 核心代码。</p>
+    </div>
+  </div>
+
+  <h3 class="section-title" style="margin-top:24px;font-size:16px">Cordis 插件与 Bundle 插件：DSH 的两种插件形态</h3>
+  <p class="section-desc" style="margin-bottom:12px">DSH 的插件有两种分发与挂载形态：<b>纯 Cordis 插件</b>是一个独立 Node 模块，通过 <code>cordis.patch.yml</code> 单独挂载；<b>Bundle 插件</b>则是一个组合包，自带 <code>cordis.patch.yml</code>，把多个插件、配置修改与默认项禁用打包在一起分发。选择哪种，取决于你要"一个功能"还是"一套方案"。</p>
+  <div class="table-wrapper">
+    <table class="dsh-table">
+      <thead>
+        <tr><th>对比维度</th><th>纯 Cordis 插件</th><th>Bundle 插件</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>形态定位</b></td>
+          <td>单个独立功能：一个 Node 工具、一个服务，或一个自渲染 UI 的插件</td>
+          <td>一套组合方案：多个插件 + 配置修改 + 禁用默认项，整体分发</td>
+        </tr>
+        <tr>
+          <td><b>配置载体</b></td>
+          <td>在 <code>cordis.patch.yml</code> 中逐条 insert，一行一个</td>
+          <td>自带 <code>cordis.patch.yml</code>，安装即生效，配置内置于包中</td>
+        </tr>
+        <tr>
+          <td><b>UI 组件</b></td>
+          <td>自渲染 UI；若声明 <code>dsh.client</code> 走官方静态 client 通道，则通常需要 Bundle 形态</td>
+          <td>提供官方格式的浏览器端 UI 组件的推荐通道</td>
+        </tr>
+        <tr>
+          <td><b>迭代方式</b></td>
+          <td>热更新，改配置、挂载或移除插件立刻可见，适合边开发边调试</td>
+          <td>一次性安装、不常改动，适合配置好就不动的基础功能包</td>
+        </tr>
+        <tr>
+          <td><b>控制粒度</b></td>
+          <td>随时在 <code>cordis.patch.yml</code> 加一行 / 注释一行，实时挂载或移除</td>
+          <td>整包启停，粒度在包级别</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="arch-note"><strong>一句话总结：</strong>OpenClaw 解决"Agent 如何被使用"，DeepSeek Harness 解决"Agent 如何被构建与扩展"——同一技术栈下的上下游互补。</div>
+</section>
+
+<!-- 核心概念对照 -->
+<section class="section arch-section" id="concepts">
+  <h2 class="section-title">核心概念对照</h2>
+  <p class="section-desc">下表按职责比较概念，方便找到 DSH 的相关组件；它不是一份可以直接替换的配置或数据映射。</p>
+  <div class="table-wrapper">
+    <table class="dsh-table">
+      <thead>
+        <tr><th>OpenClaw 概念</th><th>DSH 相关组件</th><th>对照说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Gateway</b></td>
+          <td>入口插件；Profile、Bundle 与 Cordis 插件树</td>
+          <td>没有可直接替换 Gateway 的组件。入口插件接收请求，Profile 与 Bundle 负责组装运行时，不负责复刻 Gateway 的路由和渠道。</td>
+        </tr>
+        <tr>
+          <td><b>Channel</b></td>
+          <td>Web / SDK / ACP / 自定义接入插件</td>
+          <td>外部请求通过对应接入插件进入运行时</td>
+        </tr>
+        <tr>
+          <td><b>Agent</b></td>
+          <td>Agent Loop 插件（<code>core/agent-loop</code>）</td>
+          <td>智能体循环本身也可以替换</td>
+        </tr>
+        <tr>
+          <td><b>Skill</b></td>
+          <td>Skill 插件 / 工作区技能（<code>skill/skill</code>）</td>
+          <td>可复用通用的 Markdown 指令；宿主专用的工具、路径、脚本和权限需要检查并适配。</td>
+        </tr>
+        <tr>
+          <td><b>Tool</b></td>
+          <td>Tool / Service Provider（<code>ctx.tools</code>）</td>
+          <td>工具通过插件注册到运行时</td>
+        </tr>
+        <tr>
+          <td><b>MCP Server</b></td>
+          <td><a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/mcp/README.zh.md"><code>mcp-client</code> / <code>mcp-manager</code></a></td>
+          <td>兼容的 MCP 服务端可以复用；连接配置须按 DSH 的字段和传输方式重新填写。</td>
+        </tr>
+        <tr>
+          <td><b>Session</b></td>
+          <td>Session / Persistence 插件（<code>core/session</code>）</td>
+          <td>DSH 使用自己的会话事件和持久化格式，不能直接打开 OpenClaw 的会话存储。</td>
+        </tr>
+        <tr>
+          <td><b>Plugin</b></td>
+          <td>Bundle / Plugin / Service</td>
+          <td>DSH 的扩展单位更偏运行时能力组合</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="arch-note"><strong>迁移提示：</strong>先选 DSH 的运行入口，再逐项评估旧渠道和路由是否需要重接、技能和工具能否复用，以及历史会话是否值得转换。</div>
+</section>
+
+<!-- DSH 的插件化运行方式 -->
+<section class="section" id="framework">
+  <h2 class="section-title">DSH 的插件化运行方式</h2>
+  <p class="section-desc">先用三层简化模型理解 DSH，再看架构图与内部细节。</p>
+
+  <div class="layer-grid">
+    <div class="layer-card">
+      <span class="layer-chip">第一层 · 入口</span>
+      <h4>请求如何进入</h4>
+      <p>请求从 Web、CLI、SDK 或 ACP 进入 DSH，由对应接入插件接收，没有中心 Gateway。</p>
+    </div>
+    <div class="layer-card">
+      <span class="layer-chip">第二层 · 组合</span>
+      <h4>运行时如何组装</h4>
+      <p>通过 Profile、Bundle 和 Plugin 组合出一个具体的 Agent Runtime：bundle 清单 → <code>cordis.patch.yml</code> → home 补丁 → <code>--patch</code> 逐层覆盖。</p>
+    </div>
+    <div class="layer-card">
+      <span class="layer-chip">第三层 · 能力</span>
+      <h4>能力由谁提供</h4>
+      <p>模型、工具、Skill、MCP、沙箱、会话和 Agent Loop 都由插件提供，均可替换。</p>
+    </div>
+  </div>
+
+  <div class="arch-note" style="margin-top:14px"><strong>开发者视角：</strong>同一个服务定义可以有不同的提供者。例如，工具按文件系统服务定义访问文件，不必知道文件系统由本地还是远程提供者实现。三种角色合在一起就是<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/capability-seams.zh.md">能力接缝</a>。</div>
+
+  <details class="deep">
+    <summary>深入阅读 · 架构图与核心包</summary>
+    <div class="deep-body">
+      <div style="margin-bottom:14px">
+        <figure class="arch-img" style="margin:0 0 14px">
+          <img src="architecture/architecture0.png" alt="DeepSeek Harness 架构图（一）" loading="lazy" decoding="async">
+          <figcaption>架构图 · 其一</figcaption>
+        </figure>
+        <figure class="arch-img" style="margin:0">
+          <img src="architecture/architecture1.png" alt="DeepSeek Harness 架构图（二）" loading="lazy" decoding="async">
+          <figcaption>架构图 · 其二</figcaption>
+        </figure>
+      </div>
+      <div class="cap-grid">
+        <div class="cap-card">
+          <div class="cap-icon">◆</div>
+          <div>
+            <h4>Cordis：一切皆插件</h4>
+            <p>插件向共享上下文贡献<b>服务、类型化事件与可逆副作用</b>（registration 即 effect，卸载时自动回滚）。产品每一部分都是插件——模型适配器、工具注册表、会话日志、智能体循环本身。扩展方式是挂载新插件，而非修改核心代码。</p>
+            <div class="cap-example">ctx.effect() · ctx.on() · typed events</div>
+          </div>
+        </div>
+        <div class="cap-card">
+          <div class="cap-icon cyan">◇</div>
+          <div>
+            <h4>Profile 与 Bundle 分层组合</h4>
+            <p><b>Profile</b> 是 Harness home 中的命名组合（bundle 清单、树外插件、用户补丁）；<b>Bundle</b> 是配置行与代码的分发格式，可被上层逐层 patch。</p>
+            <div class="cap-example">dsh --profile web --dump-config</div>
+          </div>
+        </div>
+        <div class="cap-card">
+          <div class="cap-icon purple">▣</div>
+          <div>
+            <h4>核心包（Core Packages）</h4>
+            <p><code>core/session</code> 只追加的 SessionEvent 日志；<code>core/agent-loop</code> 默认驱动器；<code>core/tools</code> 带作用域的工具注册表与守卫执行管线；<code>core/system-prompt</code> 提示词组装；<code>llm/llm</code> 适配器接缝。</p>
+          </div>
+        </div>
+        <div class="cap-card">
+          <div class="cap-icon">◈</div>
+          <div>
+            <h4>能力接缝（Capability Seams）</h4>
+            <p>一个接缝由<b>服务定义、服务提供者和消费者</b>组成。文件系统与子进程共享同一执行环境，因此 Bash、PTY 和 LSP 可以与文件操作在同一个本地或远程环境中运行。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- OpenClaw 迁移 DSH -->
+<section class="section arch-section" id="migration">
+  <h2 class="section-title">从 OpenClaw 迁移到 DSH</h2>
+  <p class="section-desc">先<a href="#quick-start">跑通一个 Headless 任务</a>，再按下列顺序逐项迁移。用 <code>--dump-config</code> 检查插件配置是否合并到位，再运行任务验证加载、调用和权限；Gateway 的渠道和路由需按目标入口单独适配。</p>
+
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-number">1</div>
+      <div class="step-body">
+        <h4>先迁移 Skill</h4>
+        <p>把可移植的 Markdown 指令放到 DSH 支持的技能目录。逐项检查 OpenClaw 专用的工具名、路径、脚本和权限，并在 DSH 中验证技能能否加载及执行。参阅 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill/README.zh.md">Skill 加载说明</a>。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">2</div>
+      <div class="step-body">
+        <h4>再迁移 MCP</h4>
+        <p>保留兼容的服务器，按 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/mcp/mcp-client/README.zh.md"><code>mcp-client</code> 配置说明</a>重填连接：本地进程检查 stdio 命令、参数与环境变量，远端检查 Streamable HTTP 地址与鉴权。需要通过设置管理连接时，参阅 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/mcp/mcp-manager/README.zh.md"><code>mcp-manager</code></a>。接入后核对工具输入定义和权限，并试调一个低风险工具。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">3</div>
+      <div class="step-body">
+        <h4>迁移自研 Tool</h4>
+        <p>将 OpenClaw Tool 改造成 DSH Plugin 或 Service Provider，在 <code>ctx.tools</code> 上注册；补齐输入 schema、错误处理和权限声明。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">4</div>
+      <div class="step-body">
+        <h4>迁移模型配置</h4>
+        <p>将模型供应商配置映射到 DSH 的 LLM 插件（<code>llm/llm</code> 适配器接缝）；验证流式输出、取消和重试行为。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">5</div>
+      <div class="step-body">
+        <h4>迁移会话和历史</h4>
+        <p>默认从新 Session 开始。确实需要保留历史时，先备份 OpenClaw 数据，再按 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/session-format-status.zh.md">DSH 会话格式</a>设计转换并在副本上验证；不要将原始存储直接放入 DSH 会话目录。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">6</div>
+      <div class="step-body">
+        <h4>最后迁移产品接入层</h4>
+        <p>根据目标场景选择 Web、SDK、Headless 或 ACP Profile；建议先用 <code>headless</code> profile 跑通单任务，再接多端。</p>
+      </div>
+    </div>
+  </div>
+
+  <details class="deep">
+    <summary>深入阅读 · 迁移范围与接入注意事项</summary>
+    <div class="deep-body">
+      <div class="table-wrapper">
+        <table class="dsh-table">
+          <thead>
+            <tr><th>迁移项</th><th>需验证的工作</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>业务逻辑 / 工具代码</b></td>
+              <td>复用不依赖宿主的业务逻辑；将旧工具注册方式改为 DSH 插件，并验证输入定义、错误处理和权限。</td>
+            </tr>
+            <tr>
+              <td><b>运行时组合方式</b></td>
+              <td>用 Profile、Bundle 与 <code>cordis.patch.yml</code> 组装插件，按目标版本检查 <code>engines.dsh</code> 兼容性。</td>
+            </tr>
+            <tr>
+              <td><b>多端接入（IM / WebChat / Nodes）</b></td>
+              <td>按各渠道验证鉴权、路由和会话关联；DSH 入口不会继承 Gateway 的设置。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+
+  <details class="deep">
+    <summary>深入阅读 · OTel 遥测迁移</summary>
+    <div class="deep-body">
+  <div class="cap-grid" style="margin-top:0">
+    <div class="cap-card">
+      <div class="cap-icon cyan">◉</div>
+      <div>
+        <h4>DSH 原生内置 OpenTelemetry</h4>
+        <p><b>DSH 原生依赖 <code>@opentelemetry/*</code> 全家桶</b>（api / api-logs / sdk-logs / otlp-exporter-base / otlp-transformer），<code>@deepseek-ai/dsh-otel</code> 插件注册 <code>ctx.otel</code> 服务，提供两个现成的 OTLP 上报通道工厂：<code>createEventReporter()</code>（普通事件、按条数批处理）与 <code>createSessionLogReporter()</code>（会话日志、4MB 字节上限）。OTLP 端点（OTLP /v1/logs）不变，后端（Jaeger / Tempo / Loki / 厂商 collector）无需改动。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">◎</div>
+      <div>
+        <h4>接入方式（三选一）</h4>
+        <p><b>① 直接挂载 <code>@deepseek-ai/dsh-otel</code></b>，用 <code>ctx.otel</code> 的 reporter 工厂自建上报，改动最小；<b>② 替换默认后端</b>：dsh-base 已挂 <code>session-telemetry-otel</code>（默认 <code>FEEDBACK_ONLY</code>，由 <code>DSH_TELEMETRY_MODE</code> 控制），通过 cordis overlay patch 替换为自己的 <code>SessionTelemetryBackend</code> 实现（emit / flush / shutdown），可复用现成 OTLP 传输；<b>③ 只做脱敏</b>：在 <code>session-telemetry/record</code> waterfall 上改写记录（监听器必须调 <code>next()</code>）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="risk-note">
+    <div class="risk-head">⚠ OTel 迁移注意事项</div>
+    <ul>
+      <li><b>信号范围差异：</b>DSH 的 OTel 通路目前只覆盖 <b>Logs</b>（OTLP /v1/logs），<b>没有 trace/span 信号</b>，也不安装全局 OTel provider——OpenClaw 若依赖 OTel tracing（span 链路），需要自行在宿主侧接 <code>@opentelemetry/sdk-trace</code>，DSH 不会代管。</li>
+      <li><b>数据模型转换：</b>遥测记录是 <code>SessionTelemetryRecord</code>（ledger 逐事件镜像 + ops 运维信号两个 channel），会话事件序列化为 <code>eventName: "session-log"</code>、JSON <code>content</code> 的 log record；OpenClaw 的 span/attribute 结构需要重新映射为 log 字段。</li>
+      <li><b>默认模式不外发：</b><code>session-telemetry-otel</code> 默认 <code>FEEDBACK_ONLY</code>（仅用户提交 feedback 时上传），要持续上报需改 <code>DSH_TELEMETRY_MODE</code> 或配置覆盖。</li>
+      <li><b>尽力而为，无 durable outbox：</b>内存队列，溢出 / 超限 / 进程退出会丢记录；关停靠 coordinator dispose 等待 <code>shutdown()</code> drain（dsh-base 默认 3000ms），关键审计数据不要只依赖此通道。</li>
+      <li><b>emit 必须非阻塞：</b>自实现 sink 的 <code>emit()</code> 在 <code>session/event</code> 热路径上，只能入队，不能同步上报。</li>
+    </ul>
+  </div>
+    </div>
+  </details>
+
+  <details class="deep">
+    <summary>深入阅读 · 开发与维护约定</summary>
+    <p class="deep-body">开发自定义插件前，先查阅<a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/architecture.zh.md">架构说明</a>和 <a href="https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cordis-primer.zh.md">Cordis 入门</a>，确认扩展点、注册与卸载方式。DSH 的公开 API 尚未稳定；升级前应查阅<a href="https://github.com/deepseek-ai/deepseek-harness/tree/master/docs/upgrade-guide">升级指南</a>并重新验证插件。</p>
+  </details>
+</section>
+
+<!-- 第一个 DSH 插件 -->
+<section class="section" id="first-plugin">
+  <h2 class="section-title">第一个 DSH 插件</h2>
+  <p class="section-desc">从想法到可运行的能力，只需六步。先理解流程，再逐步补充真实代码。</p>
+
+  <pre class="flow-card"><span class="cm"># 第一个 DSH 插件：从创建到验证</span>
+
+<span class="kw">创建插件</span>          <span class="cm"># 新建 Cordis 插件包，声明 engines.dsh 兼容性</span>
+    ↓
+<span class="kw">声明依赖</span>          <span class="cm"># 在 package.json / bundle 中声明所依赖的服务与接缝</span>
+    ↓
+<span class="kw">注册 Service / Tool</span> <span class="cm"># ctx.effect() 注册服务；ctx.tools 上注册工具并补齐 schema</span>
+    ↓
+<span class="kw">加入 Bundle</span>       <span class="cm"># 将插件加入 bundle 清单，或经 cordis.patch.yml 挂载</span>
+    ↓
+<span class="kw">启动 Profile</span>      <span class="cm"># dsh --profile &lt;name&gt; 启动运行时</span>
+    ↓
+<span class="kw">验证能力</span>          <span class="cm"># dsh --profile &lt;name&gt; --dump-config 检查插件树，运行对话验证工具</span></pre>
+
+  <div class="cap-grid" style="margin-top:16px">
+    <div class="cap-card">
+      <div class="cap-icon">🧩</div>
+      <div>
+        <h4>插件由什么组成</h4>
+        <p>一个插件 = 向共享上下文贡献的<b>服务、类型化事件与可逆副作用</b>。注册即 effect（<code>ctx.effect()</code> / <code>ctx.on()</code>），卸载时自动回滚，无需手写清理逻辑。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon cyan">🛠</div>
+      <div>
+        <h4>如何提供一个 Tool 或 Service</h4>
+        <p>Tool 在 <code>ctx.tools</code> 上注册，需补齐输入 schema、错误处理和权限声明；Service 通过能力接缝提供（服务定义 + 提供者 + 消费者三角色）。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon purple">📦</div>
+      <div>
+        <h4>如何在 Profile 中启用</h4>
+        <p>把插件加入 bundle 清单，或通过市场安装后写入 <code>cordis.patch.yml</code>；启停单个插件仅改写条目的 <code>disabled</code>，与 HMR 配合免重启生效。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">🧭</div>
+      <div>
+        <h4>三条开发纪律</h4>
+        <p>① 所有贡献必须经 <code>ctx.effect()</code> / <code>ctx.on()</code>；② 瀑布监听器必须调用 <code>next()</code>；③ 模型可见的新输入必须有对应 SessionEvent。动手前先读 <code>docs/architecture.md</code> 与 Cordis primer。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 插件市场 -->
+<section class="section" id="market">
+  <h2 class="section-title">插件市场与 Skill / MCP 接入</h2>
+  <div class="arch-note" style="margin:0 0 16px"><strong>安全价值：</strong>Skill 和 MCP 既降低能力接入成本，也把接入、授权、审批、执行和审计纳入统一控制链路——插件市场不仅是能力分发入口，也是能力审核、版本管理、权限控制和运行审计入口。</div>
+  <div class="sec-grid">
+    <div class="sec-chip">
+      <div class="sec-icon">🔍</div>
+      <div class="sec-name">接入前检查</div>
+      <div class="sec-desc">inspect 预检来源连通性</div>
+    </div>
+    <div class="sec-chip">
+      <div class="sec-icon">🔐</div>
+      <div class="sec-name">最小权限</div>
+      <div class="sec-desc">工具带作用域与权限声明</div>
+    </div>
+    <div class="sec-chip">
+      <div class="sec-icon">✋</div>
+      <div class="sec-name">执行审批</div>
+      <div class="sec-desc">沙箱与审批策略管线</div>
+    </div>
+    <div class="sec-chip">
+      <div class="sec-icon">📝</div>
+      <div class="sec-name">操作审计</div>
+      <div class="sec-desc">模型可见即已记录</div>
+    </div>
+  </div>
+  <div class="cap-grid">
+    <div class="cap-card">
+      <div class="cap-icon">◎</div>
+      <div>
+        <h4>去中心化的插件索引</h4>
+        <p>市场不是集中式商店，而是<b>用户自选的插件索引</b>：任意静态主机可发布一个 JSON 索引文件（格式 <code>format: 1</code>），声明条目的 npm / Git 来源、版本与 <code>engines</code> 兼容性。<code>dsh-plugin-market</code> 服务读取索引并校验，搜索基于 MiniSearch 模糊匹配，支持 CJK 二字组合与编辑距离容错；每个版本标注安装状态与 DSH 兼容性。</p>
+      </div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon cyan">◉</div>
+      <div>
+        <h4>安装与生效链路</h4>
+        <p>安装本质是 <code>pnpm add &lt;spec&gt;</code> 到 profile 目录（注册表名、git URL、tarball、本地路径均可），npm 官方源失败时回退 npmmirror。安装前 <code>inspect(spec)</code> 预检（<code>pnpm view</code> + <code>git ls-remote</code> 连通性）；失败自动回滚 <code>package.json</code> 与 lockfile 快照。与 HMR 配合<b>免重启生效</b>；启停单个插件仅改写 <code>cordis.patch.yml</code> 条目的 <code>disabled</code>。</p>
+        <div class="cap-example">dsh plugin --profile &lt;name&gt;</div>
+      </div>
+    </div>
+  </div>
+
+  <figure class="arch-img" style="margin:16px 0 0">
+    <img src="architecture/market.png" alt="DSH 插件市场界面：已安装插件列表（dsh-better-sidebar、@liustack/modlens、dsh-at-file、dsh-context），含版本、说明、启用开关与更新状态" loading="lazy" decoding="async">
+    <figcaption>插件市场 · 已安装列表与启用开关（发现 / 主题 / 收藏 / 已屏蔽 / 高级 分类）</figcaption>
+  </figure>
+
+  <figure class="arch-img" style="margin:14px 0 0">
+    <img src="architecture/context.png" alt="DSH 上下文洞察界面：上下文统计、Token 分析、耗时统计、上下文/压缩计时、上一次压缩与上下文变动记录" loading="lazy" decoding="async">
+    <figcaption>插件示例 · 上下文洞察面板（dsh-context）：上下文统计、Token 分析、耗时统计与压缩记录</figcaption>
+  </figure>
+
+  <h3 class="section-title" style="margin-top:24px;font-size:16px">最推荐的 5 个插件</h3>
+  <div class="form-grid">
+    <div class="form-card">
+      <h4><span class="form-chip">1</span>MCP 工具接入 · mcp-client / mcp-manager</h4>
+      <p><code>mcp-client</code> 连接一台外部 MCP 服务器并将工具注册到 <code>ctx.tools</code>；<code>mcp-manager</code> 管理由设置驱动的客户端连接。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip c2">2</span>Skill 加载 · skill/skill</h4>
+      <p>从工作区与配置加载 Skill。复用社区技能前，检查它依赖的工具、路径、脚本和权限。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip">3</span>Subagent 委派 · subagent</h4>
+      <p>统一接口后的子智能体提供者：从新建子 agent 到委派给另一个产品的 turn 都可实现，是并行化与上下文隔离的核心手段，search / 计算密集型任务的首选。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip c2">4</span>Sandbox 进程约束 · sandbox</h4>
+      <p>通过 <code>ctx.sandbox</code> 限制派生进程的权限；配置时要确保相关进程与文件操作使用同一执行环境。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip">5</span>Plugin Market 发现页 · plugin-market-bundle</h4>
+      <p>默认关闭的可选组合包，挂载市场服务并在 Web 端启用"发现"标签页——装上它，插件市场本身就是即装即用的插件，直观展示 DSH 组合模型的自我举例。</p>
+    </div>
+    <div class="form-card">
+      <h4><span class="form-chip c2">＋</span>更多实验性插件</h4>
+      <p><code>experimental/</code> 下约 60 个可公开安装但无产品支持承诺的插件：liveshare、translator、speech-to-text、worktree、cua、forge 等，按需自取。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 项目现状（参考信息） -->
+<section class="section arch-section" id="status">
+  <h2 class="section-title">项目现状（参考信息）</h2>
+  <p class="section-desc">以下内容适合在完成入门理解后参考：当前实现状态、带来的收益与不足、风险提示。更底层的工程与治理细节已折叠。</p>
+  <details class="deep" style="margin-top:0">
+    <summary>深入阅读 · 工程与治理细节（仓库规模、工程质量、兼容性策略等）</summary>
+    <div class="deep-body">
+  <div class="table-wrapper">
+    <table class="dsh-table">
+      <thead>
+        <tr><th>维度</th><th>现状</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>仓库组成</b></td>
+          <td><code>packages/</code> 按能力分组，包括 core、llm、shell、sandbox、session、client 和 mcp 等；仓库还包含 Cordis 源码、Python SDK、原生 Node.js 扩展和 VitePress 文档站。</td>
+        </tr>
+        <tr>
+          <td><b>工程质量</b></td>
+          <td><code>strict</code> TypeScript 全量编译；CI 覆盖率门禁为<b>源码逐文件 100%</b>；lint、跨文件克隆检测（duplication）、publint/hygiene、文档门禁（doc-sync、doc-budgets）齐备；快照测试基于无密钥录制会话回放，e2e 无 <code>DEEPSEEK_API_KEY</code> 时自跳过。</td>
+        </tr>
+        <tr>
+          <td><b>工程纪律</b></td>
+          <td>禁止新增 <code>as unknown</code> 断言；品牌化跨边界 id；跨边界显式 resolve 而非隐藏默认值；错误处理遵循结构化失败与本地化报告技能规范；PR 描述、标签体系、堆叠 PR 流程均有专门技能约束。</td>
+        </tr>
+        <tr>
+          <td><b>兼容性策略</b></td>
+          <td>公开 API 处于 pre-stable，破坏性变更须同步全部消费者并记入升级指南；会话格式使用单调 <code>SCHEMA_VERSION</code>，相邻迁移可新增版本后继但绝不移动/覆盖已提交代次。</td>
+        </tr>
+        <tr>
+          <td><b>平台支持</b></td>
+          <td>Node ≥ 24.9 + pnpm workspaces；macOS/Linux 快照夹具；Windows 桌面打包与签名流程（含 wine 诊断通道）。</td>
+        </tr>
+        <tr>
+          <td><b>实验性能力</b></td>
+          <td><code>experimental/</code> 承载经评估但未承诺产品支持的能力，其状态独立于可选交付；非实验包需产品使用或显式分类备案。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+    </div>
+  </details>
+
+  <div class="pc-grid">
+    <div class="pc-card pros">
+      <div class="pc-head">✔ 带来的收益</div>
+      <ul>
+        <li><b>能力可替换、不锁定供应商：</b>模型适配、工具注册、会话日志乃至智能体循环都是插件，换实现即换能力，无需改动核心代码。</li>
+        <li><b>组合即产品：</b>同一底座经 Profile + Bundle 组合派生 Web、桌面、Headless、SDK、ACP 多种形态，研发成果复用度极高。</li>
+        <li><b>扩展成本低：</b>新增能力等于挂载一个插件；每个能力接缝（fs / shell / sandbox / subagent / llm / mcp）都可被第三方独立实现。</li>
+        <li><b>可测试、可回归：</b>无密钥录制回放快照测试 + 源码逐文件 100% 覆盖率，使重构与跨版本升级的风险可量化、可收敛。</li>
+        <li><b>可审计、可复原：</b>"模型可见即已记录"与版本化持久化，让长周期智能体工作流的每一步都能重建与追溯，满足企业合规要求。</li>
+        <li><b>多语言接入：</b>TypeScript / Python 双 SDK 共享同一 CLI 运行时，便于 IDE 插件、CI 自动化与嵌入式智能体场景复用。</li>
+      </ul>
+    </div>
+    <div class="pc-card cons">
+      <div class="pc-head">⚠ 带来的不足</div>
+      <ul>
+        <li><b>学习曲线陡峭：</b>插件树、Service、Event、可逆副作用等概念密集，新人需先理解 Cordis 模型才能有效改动代码。</li>
+        <li><b>调试链路变长：</b>一次请求要穿透多层插件与事件钩子，问题定位高度依赖会话日志与遥测，纯靠断点效率偏低。</li>
+        <li><b>配置复杂度上升：</b>bundle → patch → home 补丁 → <code>--patch</code> 多层覆盖，配置错误往往不报错而是静默改变行为。</li>
+        <li><b>安装与启动：</b>依赖范围和启动开销取决于安装方式与启动时加载的插件。</li>
+        <li><b>小改动也要走全流程：</b>100% 逐文件覆盖率与多重门禁，使修一个 bug 也可能需要补测试与文档预算。</li>
+        <li><b>生态仍在早期：</b>插件数量多但成熟度参差，缺乏中心化平台的统一质量背书。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 不稳定因素与风险（独立章节） -->
+<section class="section arch-section" id="instability">
+  <h2 class="section-title">DSH 的不稳定因素与风险</h2>
+  <p class="section-desc">DSH 的不稳定，根源在于它被官方明确定位为<b>实验性的开发者预览软件</b>：设计上就不追求生产级稳定性，"一切皆插件"的架构叠加快速迭代节奏，直接导致了下述各类问题。</p>
+
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-number">1</div>
+      <div class="step-body">
+        <h4>官方定位与安全风险</h4>
+        <p>dsh 的 <code>SAFETY.md</code> 明确指出：该软件<b>未经安全审计</b>，不得视为安全或可用于生产，沙箱也"不保证隔离"。它本身就能执行模型生成的代码和命令——错误的输出、有缺陷的插件或配置错误，都可能导致文件被改删或数据泄露。这是最根本的风险来源。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">2</div>
+      <div class="step-body">
+        <h4>破坏性变更频繁，升级即"踩坑"</h4>
+        <p>这是社区反馈最集中的痛点。官方 README 用全大写字母警告会有破坏兼容性的变更。实际案例包括：升级后旧版用户预设因字段名从 <code>text</code> 改为 <code>prefix</code> 而完全无法创建新会话；会话持久化格式从 v0 到 v2 的迁移多次出问题，导致历史会话损坏或无法加载，有用户形容"历史 session 都嘎了"。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">3</div>
+      <div class="step-body">
+        <h4>插件生态的连带风险</h4>
+        <p>"一切皆插件"的设计放大了不稳定性。一个插件的缺陷可能拖垮整个应用：有报告显示安装特定插件后所有工具调用瘫痪；插件间依赖冲突或导出项缺失，也可能导致启动循环崩溃。同时，官方对底层包的拆分或重构（如 <code>dsh-client-runtime</code> 被拆散、<code>ApiProxy</code> 被移除），会迫使依赖它的第三方插件必须跟着修改，否则就会失效。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">4</div>
+      <div class="step-body">
+        <h4>核心功能与执行层面的缺陷</h4>
+        <p>具体功能点上的不稳定性也持续存在：有用户报告模型会在没有对应工具实现时自行"幻觉"出工具调用，并将内部标记（DSML）泄露到普通文本中干扰对话；重试过程中切换模型不生效，系统继续用旧模型消耗配额；桌面端也曾出现内核重启白屏、冷启动鉴权超时等问题。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="risk-note">
+    <div class="risk-head">⚠ 为什么会有破坏性升级</div>
+    <p>这并非偶然的疏漏，而是其开发模式的直接结果：</p>
+    <ul>
+      <li><b>"开发者预览"的定位：</b>dsh 的首要目标是快速迭代和验证架构，而非提供稳定的用户体验。官方没有承诺向后兼容，也明确告知用户这是预览版。</li>
+      <li><b>架构重构的必然代价：</b>为了优化设计，官方会进行大规模重构——例如为将会话格式标准化直接从 v0 跳到 v2，或将一个大的客户端运行时包拆分成多个独立包。这些底层结构的变动，必然破坏上层插件或用户配置依赖的旧接口。</li>
+      <li><b>极快的发布节奏：</b>极短时间内（如几天内）官方可能合入上千个提交，并跳过多个版本号直接发布下一个版本。在这种速度下，对旧配置的迁移和兼容性测试很容易被牺牲，导致用户升级后遇到"次次都破坏性更新"的情况。</li>
+    </ul>
+  </div>
+
+  <div class="cta-section">
+    <h3>结论与应对</h3>
+    <p>dsh 的不稳定是其作为快速演进预览版软件的固有特征。追求稳定，就谨慎对待每一次升级并做好配置备份；参与生态，就持续跟进官方的变更说明（升级指南）。</p>
+  </div>
+</section>
+
+<!-- 当前研究进展 -->
+<section class="section arch-section" id="research">
+  <h2 class="section-title">当前研究进展</h2>
+  <p class="section-desc">围绕 DSH 的落地与评估，目前已完成以下六项工作，覆盖容器化交付、生态接入、插件开发、平台部署与现状评估。</p>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-number">1</div>
+      <div class="step-body">
+        <h4>完成 Docker 封装</h4>
+        <p>将 DSH Web 模式封装为 Docker 镜像（<code>dsh-web-prod</code>），固化 Node 运行时与安装依赖，实现一致的容器化交付与快速重启部署。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">2</div>
+      <div class="step-body">
+        <h4>安装插件市场与插件</h4>
+        <p>在容器内接入插件市场（dshmarket），完成市场插件与本地插件的安装实践，梳理了 profile 依赖、<code>cordis.patch.yml</code> 配置与安装后重启生效的完整链路。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">3</div>
+      <div class="step-body">
+        <h4>完成第一个插件开发</h4>
+        <p>从零开发 <code>text_stats</code> 文本统计工具插件：从本地 ts 文件直连加载，到整理为可独立分发的 npm 插件包，并完成构建、冒烟验证与跨环境（Docker）安装。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">4</div>
+      <div class="step-body">
+        <h4>K8s 部署 DSH Docker</h4>
+        <p>将 Docker 封装后的 DSH 部署到 Kubernetes 集群，验证容器化形态在 K8s 上的运行方式，为多实例与平台化运维打基础。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">5</div>
+      <div class="step-body">
+        <h4>研究 DSH 现状及不足</h4>
+        <p>系统评估 DSH 的工程现状、收益与不足，重点分析其作为实验性预览软件的不稳定因素与破坏性升级成因（见<a href="#instability">不稳定与风险</a>一节）。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">6</div>
+      <div class="step-body">
+        <h4>研究并部署 DSH Superagent</h4>
+        <p>调研 DSH 的 <code>superagent</code> profile（多智能体编排形态）并完成部署验证，探索子智能体委派与并行协作能力的实际运行效果。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 发展方向 -->
+<section class="section" id="direction">
+  <h2 class="section-title">发展方向</h2>
+  <p class="section-desc">DSH 的下一步不是堆功能，而是把"可替换、可审计、可组合"的架构优势沿三条线做深：<b>契约稳定化</b>、<b>生态可验证</b>、<b>运行时企业化</b>。</p>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-number">1</div>
+      <div class="step-body">
+        <h4>契约稳定化：从 pre-stable 走向 1.0</h4>
+        <p>以"每次破坏性变更都带迁移路径"的节奏收敛公开 API 面，把插件契约、Context 接口与会话格式从约定升级为承诺；首个稳定版本之后，插件作者可按版本承诺独立演进。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">2</div>
+      <div class="step-body">
+        <h4>生态可验证：插件市场从索引走向可信生态</h4>
+        <p>当前市场是用户自选的 JSON 索引。下一步会向<b>可验证</b>演进：来源签名、版本锁定、DSH 兼容性矩阵与质量分级，让第三方插件具备可评估的信任背书，而非仅靠人工筛选。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">3</div>
+      <div class="step-body">
+        <h4>接缝即增长面：第三方独立实现成为常态</h4>
+        <p>第三方可以围绕现有服务定义提供实现，例如远程执行环境、其他模型提供者或专用工具网关。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">4</div>
+      <div class="step-body">
+        <h4>运行时企业化：审计、沙箱与审批成为标准配置</h4>
+        <p>围绕"模型可见即已记录"扩展原生 OTel 遥测、会话审计与回放能力，并把沙箱后端、审批策略、权限最小化沉淀为可直接启用的标准配置项，支撑企业级合规落地。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">5</div>
+      <div class="step-body">
+        <h4>多智能体与长任务：上下文治理成为主战场</h4>
+        <p>子智能体、Agent Teams 与技能加载已统一在接缝之后，下一步聚焦并行化编排、上下文压缩与跨会话记忆治理——让长周期、多角色协作的智能体工作流真正可运营。</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-number">6</div>
+      <div class="step-body">
+        <h4>形态收口与门槛下降：一条纪律，多种交付</h4>
+        <p>Web / 桌面 / Headless / SDK / ACP 继续收口在单一启动纪律下，TS 与 Python SDK 同构演进；同时把 100% 覆盖率、门禁与文档预算沉淀为脚手架模板，降低外部贡献的起步成本。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <h3>从使用平台，到构建运行时</h3>
+    <p>先迁移 Skill 与 MCP，再迁移工具与模型配置，最后写下你的第一个 DSH 插件。</p>
+    <a class="btn btn-primary" href="#migration">查看迁移步骤 ↑</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>从 OpenClaw 到 DeepSeek Harness · 开发者迁移与入门指南 · 参考 <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness 仓库</a>及其中的架构文档。</p>
+</footer>
+
+</div>
+</body>
+</html>

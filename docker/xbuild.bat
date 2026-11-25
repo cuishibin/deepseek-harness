@@ -3,6 +3,7 @@ setlocal
 
 rem Route Docker CLI to the remote daemon used in this environment.
 set "DOCKER_HOST=ssh://root@10.12.1.238"
+set "DSH_VERSION=0.0.2"
 @REM set "DOCKER_HOST=tcp://10.12.1.238:2375"
 
 rem Resolve the repository root from this script's location so the build
@@ -25,7 +26,7 @@ docker build ^
   --build-arg NO_PROXY=localhost,127.0.0.1 ^
   --build-arg DSH_CLIENT_COMMIT_HASH=%DSH_CLIENT_COMMIT_HASH% ^
   -f docker/Dockerfile.prod ^
-  -t dsh-web-prod ^
+  -t dsh-web-prod:%DSH_VERSION% ^
   .
 
 @REM docker build ^

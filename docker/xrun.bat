@@ -6,11 +6,14 @@ set "DOCKER_HOST=ssh://root@10.12.1.238"
 set "REMOTE_HOST=root@10.12.1.238"
 set "PUBLIC_HOST=10.12.1.238"
 set "COPY_DATA=0"
-set "IMAGE_NAME=dsh-web-prod"
+@REM set "IMAGE_NAME=dsh-web-prod"
+set "IMAGE_NAME=dsh-web-prod:0.0.2"
 rem IMAGE_TYPE dsh-web-dev or dsh-web-prod
 set "IMAGE_TYPE=dsh-web-prod"
-set "CONTAINER_NAME=dsh-web-prod"
-set "DATA_PATH=/opt/dsh"
+
+set "CONTAINER_NAME=dsh-web-prod-v2"
+set "CONTAINER_PORT=3081"
+set "DATA_PATH=/opt/dsh-v2"
 
 rem Resolve the repository root from this script's location so local paths stay
 rem correct even when the script is launched elsewhere.
@@ -59,9 +62,9 @@ docker rm -f %CONTAINER_NAME%
 
 docker run -d ^
   --name %CONTAINER_NAME% ^
-  -p 3080:3080 ^
+  -p %CONTAINER_PORT%:3080 ^
   -e DSH_HOME=/data/dsh-home ^
-  -e DSH_PUBLIC_URL=http://%PUBLIC_HOST%:3080 ^
+  -e DSH_PUBLIC_URL=http://%PUBLIC_HOST%:%CONTAINER_PORT% ^
   -e DSH_TRUSTED_HOSTS=%PUBLIC_HOST%,localhost,127.0.0.1 ^
   -v %DATA_PATH%/data/%IMAGE_TYPE%/dsh-home:/data/dsh-home ^
   -v %DATA_PATH%/data/%IMAGE_TYPE%/workspace:/workspace ^

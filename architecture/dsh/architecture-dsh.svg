@@ -1,0 +1,294 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 880" font-family="'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif">
+  <defs>
+    <linearGradient id="gTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E7F0FF"/><stop offset="1" stop-color="#D4E5FF"/>
+    </linearGradient>
+    <linearGradient id="gMid" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E2F8F2"/><stop offset="1" stop-color="#CFF3EC"/>
+    </linearGradient>
+    <linearGradient id="gBot" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EFEAFD"/><stop offset="1" stop-color="#E2DAFA"/>
+    </linearGradient>
+    <linearGradient id="gSide" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EAF1FE"/><stop offset="1" stop-color="#D8E5FD"/>
+    </linearGradient>
+    <linearGradient id="gIcon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="gIcon2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00B4D8"/><stop offset="1" stop-color="#0090AA"/>
+    </linearGradient>
+    <linearGradient id="gShield" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B9BFF"/><stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#1E3A8A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect x="0" y="0" width="1280" height="880" fill="#F4F7FB"/>
+
+  <!-- 标题 -->
+  <text x="560" y="56" text-anchor="middle" font-size="34" font-weight="700" fill="#1F2937">DeepSeek Harness 核心架构</text>
+  <text x="560" y="88" text-anchor="middle" font-size="16" fill="#64748B">全插件 Cordis 组合 · 五层可替换 · 会话日志贯穿全程</text>
+
+  <!-- 左侧层标签 -->
+  <g>
+    <rect x="28" y="170" width="112" height="40" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="84" y="196" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">入口层</text>
+    <path d="M150 190 l16 0 m-6 -6 l6 6 l-6 6" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <rect x="28" y="318" width="112" height="40" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="84" y="344" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">组合层</text>
+    <path d="M150 338 l16 0 m-6 -6 l6 6 l-6 6" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <rect x="28" y="466" width="112" height="40" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="84" y="492" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">核心层</text>
+    <path d="M150 486 l16 0 m-6 -6 l6 6 l-6 6" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <rect x="28" y="602" width="112" height="40" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="84" y="628" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">能力层</text>
+    <path d="M150 622 l16 0 m-6 -6 l6 6 l-6 6" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <rect x="28" y="748" width="112" height="40" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="84" y="774" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">执行世界</text>
+    <path d="M150 768 l16 0 m-6 -6 l6 6 l-6 6" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- 第一层：入口层 Profiles -->
+  <g filter="url(#soft)">
+    <rect x="170" y="140" width="760" height="110" rx="16" fill="url(#gTop)" stroke="#BFDBFE"/>
+  </g>
+  <g>
+    <!-- 日历图标 -->
+    <g transform="translate(200,165)">
+      <rect x="0" y="6" width="34" height="30" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+      <rect x="0" y="6" width="34" height="9" rx="6" fill="#2563EB"/>
+      <rect x="8" y="0" width="5" height="10" rx="2.5" fill="#2563EB"/>
+      <rect x="21" y="0" width="5" height="10" rx="2.5" fill="#2563EB"/>
+      <path d="M10 24 l5 5 l9 -10" stroke="#2563EB" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="17" y="56" text-anchor="middle" font-size="13" font-weight="600" fill="#1F2937">计划驱动</text>
+      <text x="17" y="72" text-anchor="middle" font-size="11" fill="#64748B">定时 / 预约</text>
+    </g>
+    <!-- 机器人（中央） -->
+    <g transform="translate(500,148)">
+      <circle cx="40" cy="8" r="5" fill="#3B82F6"/>
+      <line x1="40" y1="13" x2="40" y2="20" stroke="#3B82F6" stroke-width="3"/>
+      <rect x="8" y="20" width="64" height="46" rx="14" fill="url(#gIcon)"/>
+      <rect x="20" y="34" width="40" height="18" rx="9" fill="#0B1B3F"/>
+      <circle cx="32" cy="43" r="5" fill="#7DD3FC"/>
+      <circle cx="48" cy="43" r="5" fill="#7DD3FC"/>
+      <rect x="18" y="54" width="20" height="5" rx="2.5" fill="#7DD3FC"/>
+      <rect x="16" y="70" width="48" height="26" rx="12" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="2"/>
+      <text x="40" y="87" text-anchor="middle" font-size="11" font-weight="700" fill="#2563EB">dsh</text>
+      <rect x="0" y="76" width="10" height="18" rx="5" fill="#3B82F6"/>
+      <rect x="70" y="76" width="10" height="18" rx="5" fill="#3B82F6"/>
+      <text x="40" y="112" text-anchor="middle" font-size="13" font-weight="600" fill="#1F2937">dsh 统一启动器</text>
+      <text x="40" y="128" text-anchor="middle" font-size="11" fill="#64748B">--profile 选择形态</text>
+    </g>
+    <!-- 对话图标 -->
+    <g transform="translate(850,165)">
+      <rect x="0" y="0" width="44" height="32" rx="10" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+      <path d="M12 32 l0 10 l12 -10 z" fill="#FFFFFF" stroke="#2563EB" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="13" cy="16" r="3" fill="#2563EB"/>
+      <circle cx="22" cy="16" r="3" fill="#2563EB"/>
+      <circle cx="31" cy="16" r="3" fill="#2563EB"/>
+      <text x="22" y="56" text-anchor="middle" font-size="13" font-weight="600" fill="#1F2937">对话驱动</text>
+      <text x="22" y="72" text-anchor="middle" font-size="11" fill="#64748B">Web / TUI / API</text>
+    </g>
+    <!-- 中间小 chips -->
+    <g font-size="11" fill="#475569" text-anchor="middle">
+      <rect x="300" y="180" width="58" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="329" y="196">web</text>
+      <rect x="368" y="180" width="72" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="404" y="196">headless</text>
+      <rect x="300" y="212" width="52" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="326" y="228">sdk</text>
+      <rect x="362" y="212" width="104" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="414" y="228">sdk-minimal</text>
+      <rect x="640" y="180" width="50" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="665" y="196">acp</text>
+      <rect x="698" y="180" width="76" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="736" y="196">desktop</text>
+      <rect x="640" y="212" width="134" height="24" rx="12" fill="#FFFFFF" stroke="#93C5FD"/><text x="707" y="228">python → sdk</text>
+    </g>
+  </g>
+
+  <!-- 第二层：组合层 Bundles -->
+  <g filter="url(#soft)">
+    <rect x="170" y="288" width="760" height="110" rx="16" fill="url(#gMid)" stroke="#99E5D6"/>
+  </g>
+  <g font-size="12" fill="#334155" text-anchor="middle">
+    <!-- 堆叠方块图标 -->
+    <g transform="translate(200,316)">
+      <rect x="10" y="0" width="36" height="14" rx="4" fill="#FFFFFF" stroke="#0090AA" stroke-width="2"/>
+      <rect x="5" y="14" width="46" height="14" rx="4" fill="#FFFFFF" stroke="#0090AA" stroke-width="2"/>
+      <rect x="0" y="28" width="56" height="14" rx="4" fill="#0090AA"/>
+      <text x="28" y="58" text-anchor="middle" font-size="12" font-weight="600">分层叠加</text>
+    </g>
+    <rect x="290" y="316" width="220" height="52" rx="10" fill="#FFFFFF" stroke="#5EEAD4"/>
+    <text x="400" y="338" font-weight="700" fill="#0F766E">dsh-base（基础层）</text>
+    <text x="400" y="356" font-size="11" fill="#64748B">模型 / 工具 / 持久化 / 沙箱 / 审批</text>
+    <rect x="524" y="316" width="120" height="52" rx="10" fill="#FFFFFF" stroke="#5EEAD4"/>
+    <text x="584" y="338" font-weight="600">dsh-web-app</text>
+    <text x="584" y="356" font-size="11" fill="#64748B">浏览器应用</text>
+    <rect x="658" y="316" width="120" height="52" rx="10" fill="#FFFFFF" stroke="#5EEAD4"/>
+    <text x="718" y="338" font-weight="600">dsh-sdk-app</text>
+    <text x="718" y="356" font-size="11" fill="#64748B">JSON-RPC</text>
+    <rect x="792" y="316" width="120" height="52" rx="10" fill="#FFFFFF" stroke="#5EEAD4"/>
+    <text x="852" y="338" font-weight="600">dsh-headless</text>
+    <text x="852" y="356" font-size="11" fill="#64748B">一次性运行</text>
+    <text x="700" y="388" font-size="11" fill="#0F766E">cordis.patch.yml 逐层可 patch · 另有 acp-app / sdk-minimal / plugin-market</text>
+  </g>
+
+  <!-- 第三层：核心层 智能体循环 -->
+  <g filter="url(#soft)">
+    <rect x="170" y="436" width="760" height="110" rx="16" fill="url(#gTop)" stroke="#BFDBFE"/>
+  </g>
+  <g>
+    <!-- 循环图标 -->
+    <g transform="translate(205,462)">
+      <path d="M32 6 A26 26 0 1 0 46 34" fill="none" stroke="#2563EB" stroke-width="5" stroke-linecap="round"/>
+      <path d="M46 34 l6 -12 l-13 3 z" fill="#2563EB"/>
+      <circle cx="32" cy="32" r="9" fill="#FFFFFF" stroke="#2563EB" stroke-width="3"/>
+      <text x="32" y="66" text-anchor="middle" font-size="12" font-weight="600" fill="#1F2937">循环即插件</text>
+    </g>
+    <g font-size="12" fill="#334155" text-anchor="middle">
+      <rect x="290" y="462" width="118" height="56" rx="10" fill="#FFFFFF" stroke="#93C5FD"/>
+      <text x="349" y="486" font-weight="700" fill="#1D4ED8">agent-loop</text>
+      <text x="349" y="504" font-size="11" fill="#64748B">turn / step 驱动</text>
+      <rect x="420" y="462" width="118" height="56" rx="10" fill="#FFFFFF" stroke="#93C5FD"/>
+      <text x="479" y="486" font-weight="700" fill="#1D4ED8">core/tools</text>
+      <text x="479" y="504" font-size="11" fill="#64748B">注册表 + 守卫</text>
+      <rect x="550" y="462" width="118" height="56" rx="10" fill="#FFFFFF" stroke="#93C5FD"/>
+      <text x="609" y="486" font-weight="700" fill="#1D4ED8">core/session</text>
+      <text x="609" y="504" font-size="11" fill="#64748B">只追加事件日志</text>
+      <rect x="680" y="462" width="118" height="56" rx="10" fill="#FFFFFF" stroke="#93C5FD"/>
+      <text x="739" y="486" font-weight="700" fill="#1D4ED8">core/agent</text>
+      <text x="739" y="504" font-size="11" fill="#64748B">接口 + 注册表</text>
+      <rect x="810" y="462" width="102" height="56" rx="10" fill="#FFFFFF" stroke="#93C5FD"/>
+      <text x="861" y="486" font-weight="700" fill="#1D4ED8">llm 适配器</text>
+      <text x="861" y="504" font-size="11" fill="#64748B">接缝可换</text>
+    </g>
+    <text x="700" y="536" text-anchor="middle" font-size="11" fill="#1D4ED8">registration = effect：挂载即生效，卸载自动回滚</text>
+  </g>
+
+  <!-- 第四层：能力层 插件生态 -->
+  <g filter="url(#soft)">
+    <rect x="170" y="582" width="760" height="110" rx="16" fill="url(#gBot)" stroke="#C4B5FD"/>
+  </g>
+  <g font-size="12" fill="#334155" text-anchor="middle">
+    <g transform="translate(196,606)">
+      <rect x="0" y="0" width="16" height="16" rx="4" fill="url(#gIcon2)"/>
+      <rect x="20" y="0" width="16" height="16" rx="4" fill="url(#gIcon)"/>
+      <rect x="0" y="20" width="16" height="16" rx="4" fill="url(#gIcon)"/>
+      <rect x="20" y="20" width="16" height="16" rx="4" fill="url(#gIcon2)"/>
+      <text x="18" y="52" font-size="12" font-weight="600">能力接缝</text>
+    </g>
+    <g text-anchor="middle">
+      <rect x="290" y="604" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="350" y="626">shell / terminal</text>
+      <rect x="420" y="604" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="480" y="626">fs / lsp / ptc</text>
+      <rect x="550" y="604" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="610" y="626">sandbox 沙箱</text>
+      <rect x="680" y="604" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="740" y="626">subagent / team</text>
+      <rect x="810" y="604" width="102" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="861" y="626">mcp / skill</text>
+      <rect x="290" y="646" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="350" y="668">browser-use</text>
+      <rect x="420" y="646" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="480" y="668">web 搜索</text>
+      <rect x="550" y="646" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="610" y="668">todo / goal</text>
+      <rect x="680" y="646" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="740" y="668">schedule / plan</text>
+      <rect x="810" y="646" width="102" height="34" rx="8" fill="#FFFFFF" stroke="#C4B5FD"/><text x="861" y="668">workflow …</text>
+    </g>
+  </g>
+
+  <!-- 第五层：执行世界 -->
+  <g filter="url(#soft)">
+    <rect x="170" y="728" width="760" height="110" rx="16" fill="url(#gMid)" stroke="#99E5D6"/>
+  </g>
+  <g font-size="12" fill="#334155" text-anchor="middle">
+    <g transform="translate(205,752)">
+      <rect x="0" y="8" width="44" height="28" rx="6" fill="#FFFFFF" stroke="#0090AA" stroke-width="2"/>
+      <rect x="0" y="8" width="44" height="8" rx="4" fill="#0090AA"/>
+      <circle cx="10" cy="26" r="3" fill="#0090AA"/>
+      <circle cx="20" cy="26" r="3" fill="#0090AA"/>
+      <text x="22" y="56" text-anchor="middle" font-size="12" font-weight="600">统一执行</text>
+    </g>
+    <text x="280" y="792" text-anchor="end" font-size="13" font-weight="700" fill="#0F766E">本地</text>
+    <g text-anchor="middle">
+      <rect x="300" y="758" width="96" height="34" rx="8" fill="#FFFFFF" stroke="#5EEAD4"/><text x="348" y="780">Bash</text>
+      <rect x="404" y="758" width="96" height="34" rx="8" fill="#FFFFFF" stroke="#5EEAD4"/><text x="452" y="780">PTY</text>
+      <rect x="508" y="758" width="96" height="34" rx="8" fill="#FFFFFF" stroke="#5EEAD4"/><text x="556" y="780">LSP</text>
+      <rect x="612" y="758" width="120" height="34" rx="8" fill="#FFFFFF" stroke="#5EEAD4"/><text x="672" y="780">文件读写</text>
+      <rect x="740" y="758" width="116" height="34" rx="8" fill="#FFFFFF" stroke="#5EEAD4"/><text x="798" y="780">审批策略</text>
+    </g>
+    <!-- 双向箭头 -->
+    <line x1="480" y1="812" x2="760" y2="812" stroke="#0090AA" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <path d="M480 812 l10 -5 v10 z" fill="#0090AA"/>
+    <path d="M760 812 l-10 -5 v10 z" fill="#0090AA"/>
+    <text x="620" y="830" text-anchor="middle" font-size="11" fill="#0F766E">切换沙箱后端：Bash / PTY / LSP 整体迁移，无提供者分叉</text>
+    <text x="280" y="830" text-anchor="end" font-size="12" font-weight="600" fill="#0F766E">⇄ 远程沙箱</text>
+  </g>
+
+  <!-- 右侧：工程防线 -->
+  <g filter="url(#soft)">
+    <rect x="952" y="140" width="300" height="700" rx="16" fill="url(#gSide)" stroke="#BFDBFE"/>
+  </g>
+  <text x="1102" y="182" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2937">五道工程防线</text>
+
+  <g>
+    <!-- shield icon + text -->
+    <g transform="translate(980,210)">
+      <path d="M22 0 l20 7 v16 c0 13 -9 23 -20 28 c-11 -5 -20 -15 -20 -28 v-16 z" fill="url(#gShield)"/>
+      <path d="M14 24 l6 6 l12 -12" stroke="#FFFFFF" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="1030" y="228" font-size="14" font-weight="700" fill="#1F2937">类型安全</text>
+    <text x="1030" y="248" font-size="12" fill="#64748B">strict TS · 品牌化 id</text>
+
+    <g transform="translate(980,286)">
+      <path d="M22 0 l20 7 v16 c0 13 -9 23 -20 28 c-11 -5 -20 -15 -20 -28 v-16 z" fill="url(#gShield)"/>
+      <rect x="12" y="12" width="20" height="16" rx="3" fill="#FFFFFF"/>
+      <line x1="12" y1="18" x2="32" y2="18" stroke="#2563EB" stroke-width="2.5"/>
+      <circle cx="22" cy="24" r="2.5" fill="#2563EB"/>
+    </g>
+    <text x="1030" y="304" font-size="14" font-weight="700" fill="#1F2937">测试门禁</text>
+    <text x="1030" y="324" font-size="12" fill="#64748B">逐文件 100% 覆盖率</text>
+
+    <g transform="translate(980,362)">
+      <path d="M22 0 l20 7 v16 c0 13 -9 23 -20 28 c-11 -5 -20 -15 -20 -28 v-16 z" fill="url(#gShield)"/>
+      <path d="M14 22 a8 8 0 0 1 13 -6 M30 22 a8 8 0 0 0 -13 6" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M27 12 l0 6 l-6 0 z" fill="#FFFFFF"/>
+      <path d="M17 32 l0 -6 l6 0 z" fill="#FFFFFF"/>
+    </g>
+    <text x="1030" y="380" font-size="14" font-weight="700" fill="#1F2937">会话日志不变量</text>
+    <text x="1030" y="400" font-size="12" fill="#64748B">模型可见 ⟺ 已记录</text>
+
+    <g transform="translate(980,438)">
+      <path d="M22 0 l20 7 v16 c0 13 -9 23 -20 28 c-11 -5 -20 -15 -20 -28 v-16 z" fill="url(#gShield)"/>
+      <circle cx="22" cy="22" r="8" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+      <line x1="22" y1="22" x2="22" y2="16" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+      <line x1="22" y1="22" x2="27" y2="25" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <text x="1030" y="456" font-size="14" font-weight="700" fill="#1F2937">静态门禁</text>
+    <text x="1030" y="476" font-size="12" fill="#64748B">lint / 克隆检测 / 文档预算</text>
+
+    <g transform="translate(980,514)">
+      <path d="M22 0 l20 7 v16 c0 13 -9 23 -20 28 c-11 -5 -20 -15 -20 -28 v-16 z" fill="url(#gShield)"/>
+      <path d="M22 12 v10 M22 27 v1" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <text x="1030" y="532" font-size="14" font-weight="700" fill="#1F2937">兼容性策略</text>
+    <text x="1030" y="552" font-size="12" fill="#64748B">升级指南 · 相邻迁移链</text>
+  </g>
+
+  <!-- 右侧连接点 -->
+  <g fill="#93C5FD">
+    <circle cx="938" cy="195" r="4"/><line x1="938" y1="195" x2="952" y2="230" stroke="#BFDBFE" stroke-width="1.5"/>
+    <circle cx="938" cy="343" r="4"/><line x1="938" y1="343" x2="952" y2="330" stroke="#BFDBFE" stroke-width="1.5"/>
+    <circle cx="938" cy="491" r="4"/><line x1="938" y1="491" x2="952" y2="405" stroke="#BFDBFE" stroke-width="1.5"/>
+    <circle cx="938" cy="637" r="4"/><line x1="938" y1="637" x2="952" y2="492" stroke="#BFDBFE" stroke-width="1.5"/>
+    <circle cx="938" cy="783" r="4"/><line x1="938" y1="783" x2="952" y2="557" stroke="#BFDBFE" stroke-width="1.5"/>
+  </g>
+
+  <!-- 底部图例 -->
+  <g font-size="12" fill="#64748B">
+    <rect x="170" y="856" width="14" height="14" rx="4" fill="url(#gTop)"/>
+    <text x="192" y="868">插件（可替换）</text>
+    <rect x="290" y="856" width="14" height="14" rx="4" fill="url(#gBot)"/>
+    <text x="312" y="868">能力接缝</text>
+    <line x1="390" y1="863" x2="420" y2="863" stroke="#0090AA" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <text x="428" y="868">执行世界迁移</text>
+    <text x="932" y="868" text-anchor="end" font-style="italic">全插件架构：每个方块都是 Cordis 插件，经配置组合与替换，不存在特权核心</text>
+  </g>
+</svg>

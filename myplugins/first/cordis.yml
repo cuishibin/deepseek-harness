@@ -1,0 +1,4 @@
+# 本地插件通过此覆盖层加入 Web 配置。
+- insert:
+    - id: text-stats
+      name: 'D:/30-develop/github/deepseek-harness/myplugins/first/text-stats.ts'

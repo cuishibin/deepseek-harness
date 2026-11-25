@@ -1,0 +1,18 @@
+// myplugins 是仓库外的本地示例目录，不属于任何 workspace 包。
+// 通过 extends 继承仓库根的路径映射，使编辑器能把
+// @deepseek-ai/cordis 与 @deepseek-ai/dsh-tools 解析到源码。
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // 示例插件不生成构建产物，仅用于类型检查与编辑器体验。
+    "noEmit": true,
+    "composite": false,
+    "incremental": false,
+    // 映射到仓库已构建的类型声明；映射源码会把 vendor 全量纳入检查。
+    "paths": {
+      "@deepseek-ai/cordis": ["../vendor/cordis/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-tools": ["../packages/core/tools/lib/types/index.d.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

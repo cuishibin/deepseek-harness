@@ -1,0 +1,30 @@
+{
+  "name": "dsh-plugin-text-stats",
+  "version": "0.1.0",
+  "description": "DSH plugin providing a text_stats tool that counts Unicode code points and lines.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=24.9"
+  }
+}
